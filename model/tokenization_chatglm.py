@@ -1,13 +1,14 @@
-import regex as re
 import base64
-import os
 import json
+import os
+from typing import List, Optional, Union, Dict, Any
+
+import regex as re
 import tiktoken
 from torch import TensorType
-from typing import List, Optional, Union, Dict, Any
 from transformers import PreTrainedTokenizer
-from transformers.utils import logging, PaddingStrategy
 from transformers.tokenization_utils_base import EncodedInput, BatchEncoding
+from transformers.utils import PaddingStrategy
 
 
 class ChatGLM4Tokenizer(PreTrainedTokenizer):
@@ -232,7 +233,6 @@ class ChatGLM4Tokenizer(PreTrainedTokenizer):
                 return output["input_ids"]
         else:
             return result
-
 
     def build_inputs_with_special_tokens(
             self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None

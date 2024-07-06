@@ -1,20 +1,20 @@
 """ PyTorch ChatGLM model. """
+import copy
 import json
 import math
-import copy
-import warnings
-import re
 import sys
+import warnings
+from copy import deepcopy
+from typing import Optional, Tuple, Union, List, Callable, Dict, Any
 
 import torch
-import torch.utils.checkpoint
 import torch.nn.functional as F
+import torch.utils.checkpoint
 from torch import nn
 from torch.nn import CrossEntropyLoss, LayerNorm, MSELoss, BCEWithLogitsLoss
 from torch.nn.utils import skip_init
-from typing import Optional, Tuple, Union, List, Callable, Dict, Any
-from copy import deepcopy
-
+from transformers.generation.logits_process import LogitsProcessor
+from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList, GenerationConfig, ModelOutput
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -22,19 +22,17 @@ from transformers.modeling_outputs import (
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging, is_torch_npu_available
-from transformers.generation.logits_process import LogitsProcessor
-from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList, GenerationConfig, ModelOutput
 
 from .configuration_chatglm import ChatGLMConfig
 
 try:
     from transformers.utils import is_flash_attn_greater_or_equal_2_10, is_flash_attn_2_available
+
     if is_flash_attn_2_available():
         from flash_attn import flash_attn_func, flash_attn_varlen_func
         from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
 except:
     pass
-
 
 # flags required to enable jit fusion kernels
 
@@ -354,7 +352,8 @@ class FlashAttention2(CoreAttention):
         )
         if query_length == kv_seq_len:
             query_layer = index_first_axis(
-                query_layer.reshape(batch_size * kv_seq_len, self.num_attention_heads_per_partition, head_dim), indices_k
+                query_layer.reshape(batch_size * kv_seq_len, self.num_attention_heads_per_partition, head_dim),
+                indices_k
             )
             cu_seqlens_q = cu_seqlens_k
             max_seqlen_in_batch_q = max_seqlen_in_batch_k
