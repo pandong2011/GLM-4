@@ -25,6 +25,7 @@ class ChatGLM4Tokenizer(PreTrainedTokenizer):
     ):
         self.name = "GLM4Tokenizer"
         self.vocab_file = vocab_file
+        # filter out noise by regex
         pat_str = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
         self.pat_str = re.compile(pat_str)
         self.encode_special_tokens = encode_special_tokens
